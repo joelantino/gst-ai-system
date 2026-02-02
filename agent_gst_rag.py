@@ -39,23 +39,30 @@ class GSTRagAgent:
             print("Searching for available Gemini models...")
             try:
                 found_model = None
-                # Prioritize flash models for speed
-                preferred_order = ["flash", "pro", "1.5", "1.0"] 
                 
                 all_models = [m for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
                 
-                # Sort models based on preference
-                all_models.sort(key=lambda x: any(p in x.name for p in preferred_order), reverse=True)
+                # Filter out image generation models
+                text_models = [m for m in all_models if 'image' not in m.name.lower()]
+                
+                # Prioritize flash models for speed, then pro
+                text_models.sort(key=lambda x: (
+                    'flash' in x.name.lower(),
+                    '2.0' in x.name or '2.5' in x.name,
+                    'pro' in x.name.lower()
+                ), reverse=True)
 
-                for m in all_models:
+                for m in text_models:
                     try:
+                        print(f"Testing: {m.name}")
                         test_model = genai.GenerativeModel(m.name)
                         test_model.generate_content("Hi")
                         self.llm_model = test_model
                         print(f"✅ Connected to LLM: {m.name}")
                         found_model = m.name
                         break
-                    except:
+                    except Exception as e:
+                        print(f"   ❌ Failed: {str(e)[:50]}")
                         continue
                 
                 if not found_model:
