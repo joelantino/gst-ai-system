@@ -11,9 +11,9 @@ A multi-agent AI system for intelligent GST (Goods and Services Tax) query proce
 - Support for invoice lookups, tax amounts, and interstate detection
 
 ### Phase 3-4: GST Rules Vector Store & RAG Agent
-- Semantic search over GST legal rules
-- Native vector store (no heavy dependencies)
+- **Pinecone Cloud Vector Database** for semantic search
 - Retrieval-Augmented Generation for accurate answers
+- REST API integration (no complex dependencies)
 - Grounded responses (no hallucinations)
 
 ### Phase 5: LangGraph Cleaning Agent
@@ -57,8 +57,19 @@ CREATE TABLE invoices (
 
 Update connection details in `agent_invoice_sql.py` (lines 49-54).
 
-### 3. Initialize Vector Store
+### 3. Setup Pinecone Vector Database
+
+**Get Pinecone API Key:**
+1. Sign up at [pinecone.io](https://www.pinecone.io/)
+2. Create a new project
+3. Copy your API key from the dashboard
+
+**Configure and Initialize:**
 ```bash
+# Edit setup_vector_db.py and add your Pinecone API key
+PINECONE_API_KEY = "your-key-here"
+
+# Run setup to create index and upload GST rules
 python setup_vector_db.py
 ```
 
@@ -67,11 +78,17 @@ python setup_vector_db.py
 python ingest_data.py
 ```
 
-### 5. Configure API Key (Optional)
+### 5. Configure API Keys
+
+**Gemini API (Optional - for LLM generation):**
 Edit `agent_gst_rag.py` and add your Gemini API key:
 ```python
 GEMINI_API_KEY = "YOUR_KEY_HERE"
+PINECONE_KEY = "YOUR_PINECONE_KEY_HERE"
 ```
+
+**Pinecone API:**
+Also add your Pinecone key in `agent_gst_rag.py` (same location as above).
 
 ### 6. Run the System
 ```bash

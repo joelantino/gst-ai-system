@@ -1,34 +1,37 @@
 import json
 import numpy as np
 import os
+import requests
 import google.generativeai as genai
 from sentence_transformers import SentenceTransformer
-from sklearn.metrics.pairwise import cosine_similarity
 
 # --- USER CONFIGURATION ---
 # PASTE YOUR GEMINI API KEY HERE
 GEMINI_API_KEY = "YOUR_GEMINI_API_KEY_HERE"
+PINECONE_KEY = "YOUR_PINECONE_API_KEY_HERE"
+INDEX_NAME = "gst-rules-index"
 # -------------------------
 
-# Configuration
-VECTOR_DB_PATH = "./gst_vector_store.json"
 MODEL_NAME = "all-MiniLM-L6-v2"
 
 class GSTRagAgent:
     def __init__(self):
-        if not os.path.exists(VECTOR_DB_PATH):
-            raise FileNotFoundError(f"Vector DB not found at {VECTOR_DB_PATH}. Run setup_vector_db.py first.")
-            
-        print("Loading Vector Store...")
-        with open(VECTOR_DB_PATH, "r") as f:
-            data = json.load(f)
-            
-        self.chunks = data["chunks"]
-        self.embeddings = np.array(data["embeddings"])
-        
-        print("Loading Embedding Model...")
+        print("Initializing RAG Agent (Pinecone REST)...")
         self.model = SentenceTransformer(MODEL_NAME)
         
+        # Get Pinecone Host
+        self.pinecone_host = None
+        try:
+            headers = {"Api-Key": PINECONE_KEY}
+            resp = requests.get(f"https://api.pinecone.io/indexes/{INDEX_NAME}", headers=headers)
+            if resp.status_code == 200:
+                self.pinecone_host = resp.json()['host']
+                print(f"✅ Connected to Pinecone Index: {self.pinecone_host}")
+            else:
+                print(f"❌ Failed to find Pinecone Index '{INDEX_NAME}'. Run setup first.")
+        except Exception as e:
+            print(f"Error connecting to Pinecone: {e}")
+
         # Configure Gemini
         self.llm_model = None
         if GEMINI_API_KEY and len(GEMINI_API_KEY) > 20:
@@ -77,20 +80,33 @@ class GSTRagAgent:
             print("Warning: No API Key set. Using simulated responses.")
 
     def retrieve_rules(self, query, top_k=2):
+        if not self.pinecone_host:
+            return ["Error: Pinecone not connected."]
+
         # 1. Embed Query
-        query_embedding = self.model.encode([query])
+        query_embedding = self.model.encode([query])[0].tolist()
         
-        # 2. Calculate Similarity (Cosine)
-        similarities = cosine_similarity(query_embedding, self.embeddings)[0]
+        # 2. Query Pinecone REST
+        url = f"https://{self.pinecone_host}/query"
+        headers = {
+            "Api-Key": PINECONE_KEY,
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "vector": query_embedding,
+            "topK": top_k,
+            "includeMetadata": True
+        }
         
-        # 3. Get Top K indices
-        top_indices = similarities.argsort()[-top_k:][::-1]
-        
-        results = []
-        for idx in top_indices:
-            results.append(self.chunks[idx])
+        try:
+            resp = requests.post(url, json=payload, headers=headers)
+            data = resp.json()
+            matches = data.get('matches', [])
             
-        return results
+            results = [m['metadata']['text'] for m in matches if 'metadata' in m]
+            return results
+        except Exception as e:
+            return [f"Error querying Pinecone: {e}"]
 
     def generate_answer(self, query):
         # 1. Retrieve
