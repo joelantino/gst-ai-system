@@ -1,0 +1,32 @@
+GST TAX SLABS:
+- 0% Rate (Exempted): Essential items like fresh milk, curd, vegetables, bread, salt.
+- 5% Rate: Household necessities like sugar, spices, tea, coffee, edible oil.
+- 12% Rate: Processed foods, computers, mobiles.
+- 18% Rate: Capital goods, soap, toothpaste, hair oil, industrial intermediates.
+- 28% Rate: Luxury items like cars, high-end motorcycles, tobacco, aerated drinks.
+
+IGST VS CGST/SGST LOGIC:
+- Intra-State Supply (location of supplier and place of supply are in same state): Apply CGST + SGST.
+   - CGST = GST Rate / 2
+   - SGST = GST Rate / 2
+- Inter-State Supply (location of supplier and place of supply are in different states): Apply IGST.
+   - IGST = GST Rate
+- Union Territories: Apply UTGST instead of SGST.
+
+INPUT TAX CREDIT (ITC):
+- Businesses can claim ITC on GST paid on purchases to offset GST collected on sales.
+- Blocked Credits (Section 17(5)): No ITC on food & beverages, personal use items, membership of clubs.
+
+REGISTRATION THRESHOLDS:
+- Goods: 40 Lakhs turnover (20 Lakhs for special category states).
+- Services: 20 Lakhs turnover (10 Lakhs for special category states).
+
+E-WAY BILL:
+- Required for movement of goods worth > Rs. 50,000.
+- Inter-state: Mandatory.
+- Intra-state: Defined by state rules.
+
+INVOICE RULES:
+- Tax Invoice: Issued by registered person for taxable supplies.
+- Bill of Supply: Issued for exempt supplies or by composition dealers.
+- Mandatory fields: GSTIN, Invoice No, Date, HSN/SAC, Taxable Value, Tax Rate, Place of Supply.

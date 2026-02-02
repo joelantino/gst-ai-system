@@ -1,0 +1,9 @@
+sentence-transformers
+psycopg2-binary
+langgraph
+langchain
+langchain_community
+regex
+numpy
+scikit-learn
+google-generativeai
