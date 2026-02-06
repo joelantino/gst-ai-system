@@ -3,10 +3,14 @@ import time
 import requests
 import json
 from sentence_transformers import SentenceTransformer
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # --- USER CONFIGURATION ---
-PINECONE_API_KEY = "YOUR_PINECONE_API_KEY_HERE"
-INDEX_NAME = "gst-rules-index"
+PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
+INDEX_NAME = os.getenv("INDEX_NAME", "gst-rules-index")
 # -------------------------
 
 MODEL_NAME = "all-MiniLM-L6-v2"

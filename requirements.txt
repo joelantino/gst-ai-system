@@ -10,3 +10,4 @@ langgraph
 regex
 google-generativeai
 requests
+python-dotenv

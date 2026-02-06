@@ -3,12 +3,16 @@ import psycopg2
 import os
 import glob
 from psycopg2.extras import execute_values
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # DB Configuration (Matches agent_invoice_sql.py)
 DB_CONFIG = {
     "dbname": "gst_invoice_db",
     "user": "postgres",
-    "password": "110030",
+    "password": os.getenv("DB_PASSWORD"),
     "host": "localhost",
     "port": "5432"
 }

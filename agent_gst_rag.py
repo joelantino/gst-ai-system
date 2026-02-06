@@ -4,12 +4,15 @@ import os
 import requests
 import google.generativeai as genai
 from sentence_transformers import SentenceTransformer
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # --- USER CONFIGURATION ---
-# PASTE YOUR GEMINI API KEY HERE
-GEMINI_API_KEY = "YOUR_GEMINI_API_KEY_HERE"
-PINECONE_KEY = "YOUR_PINECONE_API_KEY_HERE"
-INDEX_NAME = "gst-rules-index"
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+PINECONE_KEY = os.getenv("PINECONE_API_KEY")
+INDEX_NAME = os.getenv("INDEX_NAME", "gst-rules-index")
 # -------------------------
 
 MODEL_NAME = "all-MiniLM-L6-v2"
@@ -107,6 +110,33 @@ class GSTRagAgent:
             return results
         except Exception as e:
             return [f"Error querying Pinecone: {e}"]
+
+    def format_with_llm(self, query, raw_data):
+        """Uses LLM to format raw data results into structured sentences."""
+        if not self.llm_available:
+            return f"Raw Data: {raw_data}"
+            
+        prompt = f"""
+        You are a GST Assistant. Convert the following RAW DATA into a professionally structured natural language sentence or paragraph.
+        The user asked: "{query}"
+        
+        RAW DATA FROM DATABASE/CALCULATOR:
+        {json.dumps(raw_data, indent=2, default=str)}
+        
+        INSTRUCTIONS:
+        1. Be polite and professional.
+        2. Use the data provided to answer the user's question directly.
+        3. Do not invent facts not present in the raw data.
+        4. If the data is an empty list, say the information was not found.
+        
+        FINAL SENTENCE:
+        """
+        
+        try:
+            response_obj = self.llm_model.generate_content(prompt)
+            return response_obj.text.strip()
+        except Exception as e:
+            return f"Error formatting response: {e}. Raw Data: {raw_data}"
 
     def generate_answer(self, query):
         # 1. Retrieve

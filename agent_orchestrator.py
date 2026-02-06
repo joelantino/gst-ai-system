@@ -48,41 +48,38 @@ class OrchestratorAgent:
         print(f"--- Orchestrator: Classified as {intent} ---")
         
         if intent == "SQL_AGENT":
-            return agent_invoice_sql.run_query(user_query)
+            raw_result = agent_invoice_sql.run_query(user_query)
+            return self.rag_agent.format_with_llm(user_query, raw_result)
         
         elif intent == "RAG_AGENT":
-            return self.rag_agent.generate_answer(user_query)
+            rag_output = self.rag_agent.generate_answer(user_query)
+            return rag_output.get("generated_answer", "No answer found.")
             
         elif intent == "CALCULATION":
             # Example Hybrid Logic: "Calculate 18% GST on Invoice #101"
-            # 1. Extract Invoice number -> SQL
             inv_id = agent_invoice_sql.extract_invoice_id(user_query)
             if not inv_id:
                 return "Could not identify invoice ID for calculation."
             
-            # Get Invoice Total
             sql_result = agent_invoice_sql.run_query(f"total amount invoice {inv_id}")
-            # sql_result expected list of dicts, e.g. [{'total_amount': 5000}]
             
             if not sql_result or 'error' in sql_result:
                 return f"Invoice {inv_id} not found."
                 
             amount = float(sql_result[0].get('total_amount', 0))
             
-            # 2. Extract Rate likely from query
             rate_match = re.search(r"(\d+)%", user_query)
-            rate = float(rate_match.group(1)) if rate_match else 18.0 # Default fallback
+            rate = float(rate_match.group(1)) if rate_match else 18.0
             
-            # 3. Determine State (Mocking Inter-state check or fetching from DB if extended)
-            # For now, let's assume intra-state default or random
             is_interstate = False 
             
-            result = self.calculate_gst(amount, rate, is_interstate)
-            return {
+            calc_result = self.calculate_gst(amount, rate, is_interstate)
+            raw_data = {
                 "action": "Calculated GST for Invoice",
                 "invoice_id": inv_id,
-                "calculation": result
+                "calculation": calc_result
             }
+            return self.rag_agent.format_with_llm(user_query, raw_data)
             
         return "Query not understood."
 

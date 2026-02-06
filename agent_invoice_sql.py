@@ -39,6 +39,12 @@ SQL_TEMPLATES = {
 }
 
 
+import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
 # -------- Helpers --------
 def extract_invoice_id(query: str):
     match = re.search(r"\b(\d+)\b", query)
@@ -49,7 +55,7 @@ def get_db_connection():
     return psycopg2.connect(
         dbname="gst_invoice_db",
         user="postgres",
-        password="110030",
+        password=os.getenv("DB_PASSWORD"),
         host="localhost",
         port="5432"
     )
